@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>Express App</title>
+</head>
+<body>
+  <h1>Express × API Demo</h1>
+
+  <section>
+    <h2>GET API</h2>
+    <button id="btn-health">/health</button>
+    <button id="btn-time">/time</button>
+    <pre id="out-get"></pre>
+  </section>
+
+  <section>
+    <h2>POST /echo</h2>
+    <form id="echo-form">
+      <label>JSONペイロード：</label>
+      <textarea id="payload" rows="4">{ "test": "data", "number": 123 }</textarea><br/>
+      <button type="submit">送信</button>
+    </form>
+    <pre id="out-post"></pre>
+  </section>
+
+  <section>
+    <h2>POST /sum（数値配列の合計）</h2>
+    <form id="sum-form">
+      <label>カンマ区切りの数値（例: 1, 2, 3.5）</label><br/>
+      <input id="nums" value="1, 2, 3.5" style="width:300px" />
+      <button type="submit">計算</button>
+    </form>
+    <pre id="out-sum"></pre>
+  </section>
+
+  <script>
+    const outGet = document.getElementById('out-get');
+    document.getElementById('btn-health').onclick = async () => {
+      const res = await fetch('/health'); outGet.textContent = await res.text();
+    };
+    document.getElementById('btn-time').onclick = async () => {
+      const res = await fetch('/time'); outGet.textContent = await res.text();
+    };
+
+    const outPost = document.getElementById('out-post');
+    document.getElementById('echo-form').onsubmit = async (e) => {
+      e.preventDefault();
+      try {
+        const body = JSON.parse(document.getElementById('payload').value);
+        const res = await fetch('/echo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        outPost.textContent = await res.text();
+      } catch (err) {
+        outPost.textContent = 'JSONの形式が正しくありません: ' + err.message;
+      }
+    };
+
+    // 既存の<script>の末尾に追記してOK
+    const outSum = document.getElementById('out-sum');
+    document.getElementById('sum-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const arr = document.getElementById('nums').value
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length)
+        .map(Number);
+      if (arr.some(n => Number.isNaN(n))) {
+        outSum.textContent = '数値に変換できない値があります';
+        return;
+      }
+      const res = await fetch('/sum', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nums: arr })
+      });
+      outSum.textContent = await res.text();
+    };
+  </script>
+</body>
+</html>
